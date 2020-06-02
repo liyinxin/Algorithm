@@ -1,0 +1,151 @@
+template <class ForwardIterator, class T>
+  void fill (ForwardIterator first, ForwardIterator last, const T& val)
+{
+  while (first != last) {
+    *first = val;
+    ++first;
+  }
+}
+fill函数表示的是对一个数组/容器使用某个value值去填充。有三个参数，前两个表示的是要插入的范围。第三个表示的是value值
+
+template <class InputIterator, class T>
+  typename iterator_traits<InputIterator>::difference_type
+    count (InputIterator first, InputIterator last, const T& val)
+{
+  typename iterator_traits<InputIterator>::difference_type ret = 0;
+  while (first!=last) {
+    if (*first == val) ++ret;
+    ++first;
+  }
+  return ret;
+}
+count函数表示是对一个范围查找某个value出现的个数。一共有三个参数，前两个表示的要查找的范围，然后第三个表示的要查找的值
+
+
+template <class BidirectionalIterator>
+  bool next_permutation (BidirectionalIterator first,
+                         BidirectionalIterator last);
+custom (2)	
+template <class BidirectionalIterator, class Compare>
+  bool next_permutation (BidirectionalIterator first,
+                         BidirectionalIterator last, Compare comp);
+next_permutation表示的是比当前排列大的一个排列；如果不存在则返回0，如果存在返回1。并且该数组变成那个排列了。
+
+
+
+
+template <class BidirectionalIterator>
+  bool prev_permutation (BidirectionalIterator first,
+                         BidirectionalIterator last );
+template <class BidirectionalIterator, class Compare>
+  bool prev_permutation (BidirectionalIterator first,
+                         BidirectionalIterator last, Compare comp);
+prev_permutation表示的是比当前排列小的一个排列；如果不存在则返回0，如果存在返回1。并且该数组变成了那个排列了。
+
+template <class InputIterator1, class InputIterator2, class T>
+   T inner_product (InputIterator1 first1, InputIterator1 last1,
+                    InputIterator2 first2, T init)
+{
+  while (first1!=last1) {
+    init = init + (*first1)*(*first2);
+               // or: init = binary_op1 (init, binary_op2(*first1,*first2));
+    ++first1; ++first2;
+  }
+  return init;
+}
+inner_product表示的内积函数，它有四个参数，前两个表示的是第一个数据的范围，第三个参数是第二个数据的头指针（开始处）。
+最后一个参数是一个该类型的init用来盛放内积结果的。
+
+
+std::iota
+template <class ForwardIterator, class T>
+  void iota (ForwardIterator first, ForwardIterator last, T val)
+{
+  while (first!=last) {
+    *first = val;
+    ++first;
+    ++val;
+  }
+}
+iota函数表示的是使用val给你的数据范围赋值，但是只是第一个数据是value，然后其他的都是val+1
+
+
+default (1)	
+
+template <class ForwardIterator>
+  bool is_sorted (ForwardIterator first, ForwardIterator last);
+
+custom (2)	
+
+template <class ForwardIterator, class Compare>
+  bool is_sorted (ForwardIterator first, ForwardIterator last, Compare comp);
+  
+
+template <class ForwardIterator>
+  bool is_sorted (ForwardIterator first, ForwardIterator last)
+{
+  if (first==last) return true;//if the input is empty then return 
+  ForwardIterator next = first;
+  while (++next!=last) {
+    if (*next<*first)     // or, if (comp(*next,*first)) for version (2)
+      return false;
+    ++first;
+  }
+  return true;
+}
+is_sorted默认版本是有两个参数的，前两个参数表示的是你要查看的一个数据范围。默认使用的是<
+去比较排列顺序的。如果你想使用别的比较方式，可以放在第三个参数上（记住这个参数必须是一个可调用
+对象）。
+
+equality (1)	
+
+template <class InputIterator1, class InputIterator2>
+  pair<InputIterator1, InputIterator2>
+    mismatch (InputIterator1 first1, InputIterator1 last1,
+              InputIterator2 first2);
+
+predicate (2)	
+
+template <class InputIterator1, class InputIterator2, class BinaryPredicate>
+  pair<InputIterator1, InputIterator2>
+    mismatch (InputIterator1 first1, InputIterator1 last1,
+              InputIterator2 first2, BinaryPredicate pred);
+第一个默认得放mismatch表示的是对第一个数据范围和第二个数据范围进行比较。直到遇到一个不相同的数据为止。返回的是
+一个pair，第一个元素为第一个数据范围的一个适配器，第二个元素是第二个元数据范围的适配器。指向它们第一个不相等的元素
+的位置。
+第二个函数与第一个不同的是，多了一个函数。这个函数必须得返回bool值（只要是0和1就好）一个可调用的对象。使用这个
+可调用对象去处理第一个数据范围的元素和第二个数据范围的元素。
+// mismatch algorithm example
+#include <iostream>     // std::cout
+#include <algorithm>    // std::mismatch
+#include <vector>       // std::vector
+#include <utility>      // std::pair
+
+bool mypredicate (int i, int j) {
+  return (i==j);
+}
+
+int main () {
+  std::vector<int> myvector;
+  for (int i=1; i<6; i++) myvector.push_back (i*10); // myvector: 10 20 30 40 50
+
+  int myints[] = {10,20,80,320,1024};                //   myints: 10 20 80 320 1024
+
+  std::pair<std::vector<int>::iterator,int*> mypair;
+
+  // using default comparison:
+  mypair = std::mismatch (myvector.begin(), myvector.end(), myints);
+  std::cout << "First mismatching elements: " << *mypair.first;
+  std::cout << " and " << *mypair.second << '\n';
+
+  ++mypair.first; ++mypair.second;
+
+  // using predicate comparison:
+  mypair = std::mismatch (mypair.first, myvector.end(), mypair.second, mypredicate);
+  std::cout << "Second mismatching elements: " << *mypair.first;
+  std::cout << " and " << *mypair.second << '\n';
+
+  return 0;
+}
+比方说，这个第二个函数使用的是一个mypredicate函数去处理第一个数据范围的元素和第二个数据范围的元素。其中
+mypredicate表示的是：第一个数据元素是否和第二个数据元素相等。
