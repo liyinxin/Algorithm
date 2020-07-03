@@ -1,0 +1,100 @@
+标准库中的map和set(关联容器)的一些操作:
+
+删除操作:
+		c.erase(k)				从c中删除每个关键字为k的元素。返回一个size_type值，指出删除的
+								元素的数量,注意k是一个元素值，不是迭代器
+		c.erase(p)				从c中删除迭代器p指定的元素。p必须指向c中的一个真实元素，不能等
+								于c.end()。返回一个指向p之后元素的迭代器。若p指向c中的尾元素，则返回c.end()
+		c.erase(b,e)			删除迭代器对b和e所表示的范围中的元素，返回e
+
+向map添加元素:
+		c.insert(v)				v是value_type类型的对象；args用来构造一个元素
+		c.emplace(args)			对于map和set，只有当元素的关键字不在c中时才插入（或构造）元素。
+								函数返回一个pair，包含一个迭代器，指向具有指定的关键字的元素，
+								以及一个指示插入是否成功的bool值。
+
+		c.insert(b,e)			b和e是迭代器，表示一个c::value_type类型值的范围；il是这种值的花括号列表，函数返回void
+		c.insert(il)			il的形式例如{"world",1}
+								对于map和set，只插入关键字不在c中的元素。对于multimap和multiset，则会插入范围中的每个元素
+
+		c.insert(p,v)			
+		c.emplace(p,args)		类似insert(v)(或emplace(agrs))，但将迭代器p作为一个提示，
+								指出从哪里开始搜索新元素应该存储的位置。返回一个迭代器指向具有给定关键字的元素。
+
+
+查找操作
+		c.find(k)				返回一个迭代器，指向第一个关键字为k的元素，若k不在容器中，则返回尾后迭代器
+		c,count(k)				返回关键字等于k的元素的数量。对于不允许重复关键字的容器，返回值永远是0或1
+		
+		c.lower_bound(k)		返回一个迭代器，指向第一个关键字不小于k的元素
+		c.upper_bound(k)		返回一个迭代器，指向第一个关键字大于k的元素
+		c.equal_range(k)		返回一个迭代器pair，表示关键字等于k的元素的范围。若k不存在，pair的两个成员均等于c.end()
+		注意:lower_bound和upper_bound不适用于无序容器。
+		下标和at操作只适用于非const的map和unordered_map！！！
+
+
+关联容器的类型
+		key_type				此器类型的关键字类型（如果是set那么就是它的key的类型；如果是map那么也是其key的类型）
+		mapped_type				每个关键字关联的类型；只适用于map(这个其实就是map的v的类型)
+		value_type				对于set，与key_type相同；对于map，为pair<const key_type,mapped_type>
+
+
+pair上的操作
+		pair<T1,T2>	p;			p是一个pair，两个类型分别为T1和T2的成员都进行了值初始化
+		pair<T1,T2> p(v1,v2)	p是一个成员类型为T1和T2的pair;first和second的成员分别用v1和v2进行初始化
+		
+		pair<T1,T2>	p = {v1,v2}	等价于p(v1,v2)其实，就是说明{v1,v2}代表的是一个键值对。可以用来初始化pair的
+		
+		make_pair(v1,v2)		返回一个用v1和v2初始化的pair。pair的类型从v1和v2的类型推断出来。
+		
+		p.first					返回p的名为first的成员，其实也就是k的值
+		p.second				返回p的名为second的成员，其实也就是v的值
+		
+		p1 relop p2				关系运算符(<,>,<=,>=)按字典顺序定义：例如，当
+								p1.first < p2.first或!(p2.first<p1.first) && p1.second < p2.second成立
+								的时候，p1<p2为true。关系运算符利元素的<的运算符来实现
+		p1 == p2
+		p1 != p2			当first和second成员分别相等时，两个pair相等。相等性判断利用元素的==运算符实现。
+
+关联容器的比较操作
+	关联容器的类型是自定义的数据类型的时候，这个时候因为关联容器要利用<来排序（对于非unorder的关联容器）。那么这个时候，我们有两种方式去解决。
+				(1)重载<运算符
+				(2)把原先的关联容器的那个比较函数映射到自己写的一个比较函数
+			multiset<Sales_data,decltype(compareIsbn) *> bookstore(compareIsbn);
+为了使用自定义的操作，在定义multiset时我们必须提供两个类型：关键字类型Sales_data，以及比较操作类型---应该是一种函数指针类型，可以指向compareIsbn。当定义此容器类型的对象时，需要提供想要使用的操作的指针。在上面的那个中我们使用decltype来指出自定义操作的类型。记住，当用
+decltype来获得一个函数指针类型时，必须加上一个*来指出我们要使用一个给定函数类型的指针。用compareIsbn来初始化bookstore对象，这表示当我们向bookstore添加元素的时候，通过调用compareIsbn来为这些元素排序。即,bookstore中的元素将按它们的ISBN成员的值排序。
+	上面将的那个就是使用自己定义的比较函数去替代默认的比较函数。自定义的操作类型必须在尖括号中紧跟着元素类型给出!!!!!
+
+
+map的下标操作
+	map和unordered_map容器都提供了下标运算符和一个对应的at函数。set类型不支持下标，因为set中没有与关键字相关联的“值”。
+				c[k]				返回关键字为k的元素；如果k不在c中，添加一个关键字为k的元素，并对其进行值初始化
+				c.at(k)				访问关键字为k的元素，带参数检查；若k不在c中，抛出一个out_of_range的异常
+注意:对一个map使用下标操作，其行为与数组或vector上的下标操作很不相同；使用一个不在容器中的关键字作为下标，会添加一个具有此关键字的元素到map中。
+由于下标操作有可能会添加一个新元素，所以我们只可以对非const的map使用下标操作。
+
+
+使用下标操作的返回值：
+	map的下标运算符与我们用过的其他下标运算符的另一不同之处是其返回类型。对map的下标操作的时候返回的不是key_value的类型，而是返回的是mapped_type对象；当解引用一个map迭代器的时候，会得到一个value_type的对象（value_type的类型其实就是一个pair)
+
+在multimap或multiset中查找元素
+	1.使用find加count去查找
+				string search_item("Alain de Botton");
+				auto entries = authors.count(search_item);
+				auto iter = authors.find(search_item);
+				while(entries){
+					cout<<iter->second<<endl;
+					++iter;
+					--entries;
+				}
+find找到第一个元素的位置，然后count找到一共有几个相同的元素。
+	2.使用lower_bound和upper_bound来查找
+				for(auto it = authors.lower_bound(search_item); it != authors.upper_bound(search_item);++it){
+					cout<<it->second<<endl;
+				}
+这个其实就是通过lower_bound找到第一个元素的位置，然后利用upper_bound找到最后一个元素的下一个位置，然后输出就好了
+	3.使用equal_range来查找
+				for(auto pos = author.equal_range(search_item); pos.first != pos.second;++pos.first)
+					cout<<pos.first->second<<endl;
+equal_range表示返回的是一个pair，这个pair的first成员表示的是与search_item相等的元素的第一个位置；而second表示的是与search_item相等最后的一个元素的后一个位置。
+
